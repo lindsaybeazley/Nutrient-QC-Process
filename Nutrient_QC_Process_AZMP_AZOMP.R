@@ -16,15 +16,9 @@ library(tidyverse)
 library(ggplot2)
 
 
-#Set working directory and load data:
-
-setwd("C:/AZMP/7_Data Management/1_ODIS_Data_Submissions/2022/BBMP/Nutrients") #set your working directory
-
-
-
 # Step 1: Load Nutrient Data ------------------------------------
 
-Nuts <- read_excel("NUTRIENT_FILENAME_GOES_HERE.xlsx", skip=4, sheet=1, col_types='text')[, 1:12] #Skip the first 4 rows containing the header
+Nuts <- read_excel("Path where your Excel file is stored\\File Name.xlsx", skip=4, sheet=1, col_types='text')[, 1:12] #Skip the first 4 rows containing the header
 
 #Note: The col_types argument is set to read all columns in as text. This is to allow you to read
 ##in those columns that have cells with NAs.
@@ -67,12 +61,11 @@ Nuts3 <- Nuts2[- grep("CH", Nuts2$SAMPLE_ID),]
 Nutsdf<- as.data.frame(Nuts3, na.rm=TRUE)
 
 
-##onvert NA entries to blanks:
+##Convert NA entries to blanks:
 Nutsdf[is.na(Nutsdf)] <- "" 
 
 
 ###Change Nutrient fields to numeric field:
-
 Nutsdf$NITRATE <- as.numeric(Nutsdf$NITRATE)
 Nutsdf$NITRITE <- as.numeric(Nutsdf$NITRITE)
 Nutsdf$PHOSPHATE <- as.numeric(Nutsdf$PHOSPHATE)
@@ -86,7 +79,6 @@ View(Nutsdf)
 
 
 #####Create columns that calculate the difference between rep 1 and rep 2:
-
 Diff <- Nutsdf %>%
   group_by(SAMPLE_ID) %>%
   mutate(diff_NITRATE = NITRATE - lag(NITRATE, default = first(NITRATE))) %>%
