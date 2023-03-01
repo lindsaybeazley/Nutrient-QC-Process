@@ -8,7 +8,7 @@ The main features of this process include:
 3) Creating plots using base R to evaluate patterns by depth, temperature, and salinity
 4) Using ggplot2 to evaluate patterns in nutrients by event and sample ID 
 5) Using ggplot 2 to produce plots of nutrients by depth profile to evaluate vertical structure of nutrients and differences between replicates
-6) Using ifelse statements to match the character lab flags to
+6) Using ifelse statements to match the character laboratory flags to their corresponding BioChem numerical flags
 
 This code has been applied consistently to each AZMP dataset (fixed station, ecosystem trawl survey, and spring/fall survey) starting in 2023, and was also applied to certain missions conducted in 2022. 
 
