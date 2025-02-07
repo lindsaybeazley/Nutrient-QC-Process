@@ -1,9 +1,7 @@
 #Nutrient Bottle Data Quality Control Procedures for AZMP/AZOMP
 
 #Written by: Lindsay Beazley
-
-#Last Updated: February 28, 2023
-
+#Last Updated: February 6, 2025
 
 
 #Load packages:
@@ -14,6 +12,7 @@ library(readxl)
 library(data.table)
 library(tidyverse)
 library(ggplot2)
+
 
 
 # Step 1: Load Nutrient Data ------------------------------------
@@ -55,7 +54,6 @@ Nuts3 <- Nuts2[- grep("CH", Nuts2$SAMPLE_ID),]
 
 
 # Step 3: Evaluate Differences Between Replicates ------------------------------------
-
 
 #Change to dataframe (because I like working with dataframe):
 Nutsdf<- as.data.frame(Nuts3, na.rm=TRUE)
@@ -110,8 +108,7 @@ write.csv(Diff, file="Differences_Replicates_MISSION_NAME_GOES_HERE.csv")
 
 
 
-
-# Step 4: Plot Data by Environmental Factor ------------------------------------
+# Step 4: Load QAT Data to get Environmental Factors ------------------------------------
 
 
 #Load QAT data using one of the following 3 options, to get depth, temp, etc. and merge it with nutrient data. 
@@ -157,157 +154,153 @@ names(Bottlerep_df)[1] <- "SAMPLE_ID"
 
 #########
 
-##Merge Nutrient and QAT Data Together:
+##Merge nutrient and QAT data together:
 
 jointNuts <- merge(Nutsdf, CombinedQATs, by = 'SAMPLE_ID')
 nrow(Nutsdf)
 nrow(jointNuts) #do they match? 
 
 
-jointNuts$NITRATE <- as.numeric(jointNuts$NITRATE)
-jointNuts$NITRITE <- as.numeric(jointNuts$NITRITE)
-jointNuts$PHOSPHATE <- as.numeric(jointNuts$PHOSPHATE)
-jointNuts$SILICATE <- as.numeric(jointNuts$SILICATE)
-jointNuts$AMMONIUM <- as.numeric(jointNuts$AMMONIUM)
-jointNuts$PrDM <- as.numeric(jointNuts$PrDM)
-jointNuts$event <- as.numeric(jointNuts$event)
-jointNuts$RepID <- as.character(jointNuts$RepID)
 
+###Convert from wide to long format to facilitate plotting:
 
-###Exploratory plots to illustrate pattern with depth:
+jointNuts2 <- reshape2::melt(jointNuts, id=c("SAMPLE_ID", "event", "RepID", "PrDM", "T090C", "Sal00"), 
+                             measure.vars= c("NITRATE", "NITRITE", "PHOSPHATE", "SILICATE", "AMMONIUM"))
 
-plot(jointNuts$NITRATE ~ jointNuts$PrDM, xlab = "Pressure (db)", ylab= "NITRATE (µg/l)")
-plot(jointNuts$NITRITE ~ jointNuts$PrDM, xlab = "Pressure (db)", ylab= "NITRITE (µg/l)")
-plot(jointNuts$PHOSPHATE ~ jointNuts$PrDM, xlab = "Pressure (db)", ylab= "PHOSPHATE (µg/l)")
-plot(jointNuts$SILICATE ~ jointNuts$PrDM, xlab = "Pressure (db)", ylab= "SILICATE (µg/l)")
-plot(jointNuts$AMMONIUM ~ jointNuts$PrDM, xlab = "Pressure (db)", ylab= "AMMONIUM (µg/l)")
-
-
-###By temperature:
-
-plot(jointNuts$NITRATE ~ jointNuts$T090C, xlab = "Temperature (C)", ylab= "NITRATE (µg/l)")
-plot(jointNuts$NITRITE ~ jointNuts$T090C, xlab = "Temperature (C)", ylab= "NITRITE (µg/l)")
-plot(jointNuts$PHOSPHATE ~ jointNuts$T090C, xlab = "Temperature (C)", ylab= "PHOSPHATE (µg/l)")
-plot(jointNuts$SILICATE ~ jointNuts$T090C, xlab = "Temperature (C)", ylab= "SILICATE (µg/l)")
-plot(jointNuts$AMMONIUM ~ jointNuts$T090C, xlab = "Temperature (C)", ylab= "AMMONIUM (µg/l)")
-
-
-###By salinity:
-
-plot(jointNuts$NITRATE ~ jointNuts$Sal00, xlab = "Salinity", ylab= "NITRATE (µg/l)")
-plot(jointNuts$NITRITE ~ jointNuts$Sal00, xlab = "Salinity", ylab= "NITRITE (µg/l)")
-plot(jointNuts$PHOSPHATE ~ jointNuts$Sal00, xlab = "Salinity", ylab= "PHOSPHATE (µg/l)")
-plot(jointNuts$SILICATE ~ jointNuts$Sal00, xlab = "Salinity", ylab= "SILICATE (µg/l)")
-plot(jointNuts$AMMONIUM ~ jointNuts$Sal00, xlab = "Salinity", ylab= "AMMONIUM (µg/l)")
+jointNuts2 <- jointNuts2 %>% mutate_at(c('PrDM', 'T090C', 'Sal00'), as.numeric)
 
 
 
-# Step 5: Plot Data Across Time/Year (mostly for fixed stations) --------
+# Step 5: Plot Data by Environment ----------------------------------------
+
+out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Environment"
+nutrients <- unique(jointNuts2$variable)
+mission='xxxYEARyyy' #where xxx = abbreviated vessel name, and yyy = unique station name or mission ID, e.g., BCD2024666 or CAR2024010
 
 
-ggplot(jointNuts, aes(x=SAMPLE_ID, y=NITRATE, colour=RepID)) +
-  geom_point(aes(y=NITRATE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") +
-  theme(axis.text.x = element_blank())
-
-ggplot(jointNuts, aes(x=SAMPLE_ID, y=NITRITE, colour=RepID)) +
-  geom_point(aes(y=NITRITE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") +
-  theme(axis.text.x = element_blank())
-
-ggplot(jointNuts, aes(x=SAMPLE_ID, y=PHOSPHATE, colour=RepID)) +
-  geom_point(aes(y=PHOSPHATE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") +
-  theme(axis.text.x = element_blank())
-
-ggplot(jointNuts, aes(x=SAMPLE_ID, y=SILICATE, colour=RepID)) +
-  geom_point(aes(y=SILICATE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") +
-  theme(axis.text.x = element_blank())
-
-ggplot(jointNuts, aes(x=SAMPLE_ID, y=AMMONIUM, colour=RepID)) +
-  geom_point(aes(y=AMMONIUM, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") +
-  theme(axis.text.x = element_blank())
-
-#Plotting by event is also useful. May wish to plot data by depth layer. If so, move to step 6.
-#If not, move to Step 7.
-
-
-# Step 6: Extract Data by Depth Stratum and Plot (mostly for fixed stations)  --------
-
-
-#Extract surface data and plot nutrients consecutively:
-
-Samples_surf <- jointNuts %>% 
-  filter(PrDM<4)
-Samples_surf 
-
-tiff("path//NITRATE_Surface_MissionID.tiff", 
-     units="in", width=20, height=6, res=100)
-
-ggplot(Samples_surf, aes(x=SAMPLE_ID, y=NITRATE, colour=RepID)) +
-  geom_point(aes(y=NITRATE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top")
-dev.off()
-
-
-#Extract 5 m data:
-
-Samples_5m <- jointNuts %>% 
-  filter(PrDM>4 & PrDM<7)
-Samples_5m 
-
-tiff("path//NITRATE_5m_MISSIONID.tiff", 
-     units="in", width=20, height=6, res=100)
-
-ggplot(Samples_5m, aes(x=SAMPLE_ID, y=NITRATE, colour=RepID)) +
-  geom_point(aes(y=NITRATE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") 
-dev.off()
-
-
-#Extract 10 m data:
-
-Samples_10m <- jointNuts %>% 
-  filter(PrDM>8 & PrDM<12)
-Samples_10m 
-
-tiff("path//NITRATE_10m_MISSIONID.tiff", 
-     units="in", width=20, height=6, res=100)
-
-ggplot(Samples_10m, aes(x=SAMPLE_ID, y=NITRATE, colour=RepID)) +
-  geom_point(aes(y=NITRATE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") 
-dev.off()
-
-
-#Extract 60 m
-
-Samples_60m <- jointNuts %>% 
-  filter(PrDM>40)
-Samples_60m 
-
-tiff("path//AMMONIUM_60m_MISSIONID.tiff", 
-     units="in", width=24, height=6, res=100)
-
-ggplot(Samples_60m, aes(x=SAMPLE_ID, y=NITRATE, colour=RepID)) +
-  geom_point(aes(y=NITRATE, colour=RepID)) +
-  scale_color_identity(guide = "legend", name="Rep ID") +
-  theme(legend.position = "top") 
-dev.off()
+for(i in seq(1, length(nutrients), 1)){
+  sub <- (jointNuts2[jointNuts2$variable %in% nutrients[i],])
+  for(m in colnames(jointNuts2)[4:6]){ #This loops through the different environmental variables
+    plot <- ggplot(data = sub, aes(x = .data[[m]], y = value))+
+      geom_point(aes(colour = nutrients[i]), shape=1, size=3, colour="navy")+
+      ylab(paste0(nutrients[i]))+
+      theme_bw()+
+      theme(axis.text.y=element_text(size=10)) +
+      theme(axis.text.x=element_text(size=10)) +
+      theme(legend.position="none")
+    
+    png(paste(out_dir, paste0(mission, '_', nutrients[i], '_', m, '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+    print(plot)
+    
+    dev.off()
+    
+  }     
+}
 
 
 
-# Step 7: Plot Nutrient Vertical Profiles by Sampling Event ----------------------
+# Step 6: Plot Data Across Time/Year --------
+
+out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Time"
+
+for(i in seq(1, length(nutrients), 1)){
+  sub <- (jointNuts2[jointNuts2$variable %in% nutrients[i],])
+  plot <- ggplot(data = sub, aes(x = event, y = value))+
+    geom_point(aes(colour = RepID), size=2)+
+    ylab(paste0(nutrients[i]))+
+    scale_color_identity(guide = "legend", name="Rep ID") +
+    theme_bw()+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+    theme(axis.text.y=element_text(size=10)) +
+    theme(axis.text.x=element_text(size=10))
+  
+  png(paste(out_dir, paste0(mission, '_', nutrients[i], '_By_Time', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+  print(plot)
+  
+  dev.off()
+  
+}
+
+
+#The following code is useful for fixed stations, but not for missions. This plots the mean concentration of each sample by collected
+#within each cast/event, per depth
+
+out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Time"
+
+for(i in seq(1, length(nutrients), 1)){
+  sub <- (jointNuts2[jointNuts2$variable %in% nutrients[i],])
+  plot <- sub %>%
+    group_by(SAMPLE_ID) %>%
+    mutate(mean_conc = mean(value)) %>%
+    ungroup() %>%
+    ggplot(aes(x = event, y = PrDM, colour=mean_conc)) +
+    geom_point(size=3) +
+    scale_colour_gradientn(colors = c("blue", "cyan", "green", "yellow", "orange", 
+                                      "red")) +
+    scale_y_reverse()+
+    ylab("PrDM")+
+    theme_bw()+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+    theme(axis.text.y=element_text(size=10)) +
+    theme(axis.text.x=element_text(size=10)) 
+  
+  png(paste(out_dir, paste0(mission, '_', nutrients[i], '_By_Time_VerticalProfiles', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+  print(plot)
+  
+  dev.off()
+  
+}
+
+
+# Step 7: Extract Data by Depth Stratum and Plot  --------
+
+out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Depth"
+
+nom_depths <- c(0, 5, 10, 20, 30, 40, 50, 75, 100, 140) #These may change depending on the station, mission, etc.
+bin <- c(3, 5, 5, 5, 5, 5, 5, 5, 5, 5) #3 was chosen for the surface bin
+
+for(i in seq(1, length(nom_depths), 1)){
+  
+  depth_l <-(nom_depths[i] - bin[i]) # the data -5 m of nominal depth (lower depth)
+  depth_h <-(nom_depths[i] + bin[i]) # the data +5 m of the nominal depth (higher depth)
+  
+  #subset the data so that -/+ 5 m nominal depth are included. #So for the 10 m slice, data from 5 to <15 m are included in the average.
+  if (depth_l < max(jointNuts2$PrDM)) sub1 <- subset(jointNuts2, jointNuts2$PrDM >= depth_l & jointNuts2$PrDM < depth_h) 
+  
+      for(s in seq(1, length(nutrients), 1)){
+
+         sub2 <- (sub1[sub1$variable %in% nutrients[s],]) 
+            plot <- ggplot(data = sub2, aes(x = SAMPLE_ID, y=value, colour=RepID)) +
+            geom_point(aes(y=value, colour=RepID), size=3) +
+            scale_color_identity(guide = "legend", name="RepID") +
+            ylab(paste0(nutrients[s]))+
+            theme(axis.text.x=element_text(angle=90)) +
+            theme(legend.position = "top")
+            #Set a consistent scale for each variable, based on known ranges or nutrient min/max:
+            if(nutrients[s] == "NITRATE"){  
+              plot <- plot + scale_y_continuous(limits = c(0, 25))
+            } else if(nutrients[s] == "PHOSPHATE"){
+              plot <- plot + scale_y_continuous(limits = c(0, 2))
+            } else if(nutrients[s] == "SILICATE"){
+              plot <- plot + scale_y_continuous(limits = c(0, 35)) 
+            } else if(nutrients[s] == "NITRITE"){
+              plot <- plot + scale_y_continuous(limits = c(0, 1))
+            } else if (nutrients[s] == "AMMONIUM"){
+              plot <- plot + scale_y_continuous(limits = c(0, 2))
+            }
+  
+            png(paste(out_dir, paste0(mission,'_',nutrients[s],'_',nom_depths[i],'m', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+            print(plot)
+  
+            dev.off()
+  
+      }
+  
+}
+
+
+
+# Step 8: Plot Nutrient Vertical Profiles by Sampling Event ----------------------
 
 ##This code is most useful for shelf-wide data, and helps to a) detect inversion, b) evaluate vertical structure, and
 ##c) examine divergence between replicates and eliminate data if applicable. The plots and the data are examined outside
@@ -316,296 +309,169 @@ dev.off()
 #First, create the empty folders in your working directory to store the plots.
 
 
-# NITRATE
+out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Event"
+Events = unique(jointNuts2$event)
+mission='xxxYEARyyy' #where xxx = abbreviated vessel name, and yyy = unique station name or mission ID, e.g., BCD2024666 or CAR2024010
 
-out_dir = "path/Nutrients_By_Event/NITRATE"
-Events = unique(jointNuts$event)
-
-
-for (i in seq(1, length(Events), 1)){
+for (m in seq(1, length(Events), 1)){
   
-  Nuts_subset <- (jointNuts[jointNuts$event %in% Events[i],])
+  Event_subset <- (jointNuts2[jointNuts2$event %in% Events[m],])
   
-  plot <- ggplot(Nuts_subset, aes(x=PrDM)) +
-    geom_hline(yintercept = seq(0, 25, by=0.5), linetype='dotted', col = 'darkgrey') + #Add in lines to denote 0.05 threshold 
-    geom_point(aes(y=NITRATE, colour=RepID), size=2.5) +
-    guides(colour = guide_legend(label.theme = element_text(size=15))) +
-    scale_color_identity(guide = "legend", name="Rep ID") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_bw() +
-    ylab("NITRATE (µg/l)")+
-    xlab("Pressure (dbar)") +
-    theme(axis.text.y=element_text(size=12)) +
-    theme(axis.text.x=element_text(size=12)) +
-    theme(axis.title.y=element_text(size=15)) +
-    theme(axis.title.x=element_text(size=15)) +
-    scale_y_continuous(limits = c(0, 25)) + #examine data and select max limit
+  for(i in seq(1, length(nutrients), 1)){
+    sub <- (Event_subset[Event_subset$variable %in% nutrients[i],])
     
-    facet_wrap(~event, scales="free_y")+
-    theme(strip.text.x = element_text(size=17, face="bold", vjust=1))+
-    theme(strip.text.y = element_text(size=17, face="bold", vjust=1))+
-    theme(legend.position="top") 
-  #To make filename
-  eventout <- ifelse(Events[i] < 10, paste0('00', Events[i]),
-                     ifelse(Events[i]<100, paste0('0', Events[i]),
-                            Events[i]))
-  
-  png(paste(out_dir, paste0("MISSIONID_NITRATE_Event_", eventout, '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
-  print(plot)
-  
-  dev.off()
-  
+    plot <- ggplot(sub, aes(x=PrDM)) +
+      geom_point(aes(y=value, colour=RepID), size=2.5) +
+      guides(colour = guide_legend(label.theme = element_text(size=15))) +
+      scale_color_identity(guide = "legend", name="Rep ID") +
+      coord_flip() +
+      scale_x_reverse() +
+      theme_bw() +
+      ylab(paste0(nutrients[i]))+
+      xlab("Pressure (dbar)") +
+      theme(axis.text.y=element_text(size=12)) +
+      theme(axis.text.x=element_text(size=12)) +
+      theme(axis.title.y=element_text(size=15)) +
+      theme(axis.title.x=element_text(size=15)) +
+      
+      facet_wrap(~event, scales="free_y")+
+      theme(strip.text.x = element_text(size=17, face="bold", vjust=1))+
+      theme(strip.text.y = element_text(size=17, face="bold", vjust=1))+
+      theme(legend.position="top")
+    
+    if(nutrients[i] == "NITRATE"){
+      plot <- plot + geom_hline(yintercept = seq(0, 25, by=0.5), linetype='dotted', col = 'darkgrey') + 
+        geom_line(aes(y=T090C/1.0), linewidth=0.5) +
+        scale_y_continuous(limits = c(0, 25), sec.axis = sec_axis(~.*1.0, name = "Temperature"))
+    } else if(nutrients[i] == "PHOSPHATE"){
+      plot <- plot + geom_hline(yintercept = seq(0, 2, by=0.05), linetype='dotted', col = 'darkgrey') + 
+        geom_line(aes(y=T090C/6.0), linewidth=0.5) +
+        scale_y_continuous(limits = c(0, 2), sec.axis = sec_axis(~.*6.0, name = "Temperature")) 
+    } else if(nutrients[i] == "SILICATE"){
+      plot <- plot + geom_hline(yintercept = seq(0, 35, by=1), linetype='dotted', col = 'darkgrey') +
+        geom_line(aes(y=T090C/1), linewidth=0.5) +
+        scale_y_continuous(limits = c(0, 35), sec.axis = sec_axis(~.*1.0, name = "Temperature")) 
+    } else if(nutrients[i] == "NITRITE"){
+      plot <- plot + geom_hline(yintercept = seq(0, 1, by=0.05), linetype='dotted', col = 'darkgrey') +
+        geom_line(aes(y=T090C/10.0), linewidth=0.5) +
+        scale_y_continuous(limits = c(0, 1), sec.axis = sec_axis(~.*10.0, name = "Temperature")) 
+    } else if (nutrients[i] == "AMMONIUM"){
+      plot <- plot + geom_hline(yintercept = seq(0, 2, by=0.1), linetype='dotted', col = 'darkgrey') + 
+        geom_line(aes(y=T090C/10.0), linewidth=0.5) +
+        scale_y_continuous(limits = c(0, 2), sec.axis = sec_axis(~.*10.0, name = "Temperature")) 
+    }
+    
+    png(paste(out_dir, paste0(mission, '_', nutrients[i], '_Event_', Events[m], '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
+    print(plot)
+    
+    dev.off()
+    
+  }
 }
 
 
-# PHOSPHATE
-
-out_dir = "path/Nutrients_By_Event/PHOSPHATE"
-Events = unique(jointNuts$event)
-
-
-for (i in seq(1, length(Events), 1)){
-  
-  Nuts_subset <- (jointNuts[jointNuts$event %in% Events[i],])
-  
-  plot <- ggplot(Nuts_subset, aes(x=PrDM)) +
-    geom_hline(yintercept = seq(0, 12, by=0.05), linetype='dotted', col = 'darkgrey') + #Add in lines to denote 0.05 threshold 
-    geom_point(aes(y=PHOSPHATE, colour=RepID), size=2.5) +
-    guides(colour = guide_legend(label.theme = element_text(size=15))) +
-    scale_color_identity(guide = "legend", name="Rep ID") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_bw()+
-    ylab("PHOSPHATE (µg/l)")+
-    xlab("Pressure (dbar)") +
-    theme(axis.text.y=element_text(size=12)) +
-    theme(axis.text.x=element_text(size=12)) +
-    theme(axis.title.y=element_text(size=15)) +
-    theme(axis.title.x=element_text(size=15)) +
-    scale_y_continuous(limits = c(0, 12)) +
-    
-    facet_wrap(~event, scales="free_y")+
-    theme(strip.text.x = element_text(size=17, face="bold", vjust=1))+
-    theme(strip.text.y = element_text(size=17, face="bold", vjust=1))+
-    theme(legend.position="top") 
-  #To make filename
-  eventout <- ifelse(Events[i] < 10, paste0('00', Events[i]),
-                     ifelse(Events[i]<100, paste0('0', Events[i]),
-                            Events[i]))
-  
-  png(paste(out_dir, paste0("MISSIONID_PHOSPHATE_Event_", eventout, '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
-  print(plot)
-  
-  dev.off()
-  
-}
-
-# SILICATE
-
-out_dir = "path/Nutrients_By_Event/SILICATE"
-Events = unique(jointNuts$event)
-
-
-for (i in seq(1, length(Events), 1)){
-  
-  Nuts_subset <- (jointNuts[jointNuts$event %in% Events[i],])
-  
-  plot <- ggplot(Nuts_subset, aes(x=PrDM)) +
-    geom_hline(yintercept = seq(0, 50, by=1), linetype='dotted', col = 'darkgrey') + #Add in lines to denote 0.05 threshold 
-    geom_point(aes(y=SILICATE, colour=RepID), size=2.5) +
-    guides(colour = guide_legend(label.theme = element_text(size=15))) +
-    scale_color_identity(guide = "legend", name="Rep ID") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_bw()+
-    ylab("SILICATE (µg/l)")+
-    xlab("Pressure (dbar)") +
-    theme(axis.text.y=element_text(size=12)) +
-    theme(axis.text.x=element_text(size=12)) +
-    theme(axis.title.y=element_text(size=15)) +
-    theme(axis.title.x=element_text(size=15)) +
-    scale_y_continuous(limits = c(0, 50)) + #examine data and select max limit
-    
-    facet_wrap(~event, scales="free_y")+
-    theme(strip.text.x = element_text(size=17, face="bold", vjust=1))+
-    theme(strip.text.y = element_text(size=17, face="bold", vjust=1))+
-    theme(legend.position="top") 
-  #To make filename
-  eventout <- ifelse(Events[i] < 10, paste0('00', Events[i]),
-                     ifelse(Events[i]<100, paste0('0', Events[i]),
-                            Events[i]))
-  
-  png(paste(out_dir, paste0("MISSIONID_SILICATE_Event_", eventout, '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
-  print(plot)
-  
-  dev.off()
-  
-}
-
-
-# NITRITE
-
-out_dir = "path/Nutrients_By_Event/NITRITE"
-Events = unique(jointNuts$event)
-
-
-for (i in seq(1, length(Events), 1)){
-  
-  Nuts_subset <- (jointNuts[jointNuts$event %in% Events[i],])
-  
-  plot <- ggplot(Nuts_subset, aes(x=PrDM)) +
-    geom_hline(yintercept = seq(0, 0.8, by=0.05), linetype='dotted', col = 'darkgrey') + #Add in lines to denote 0.05 threshold 
-    geom_point(aes(y=NITRITE, colour=RepID), size=2.5) +
-    guides(colour = guide_legend(label.theme = element_text(size=15))) +
-    scale_color_identity(guide = "legend", name="Rep ID") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_bw()+
-    ylab("NITRITE (µg/l)")+
-    xlab("Pressure (dbar)") +
-    theme(axis.text.y=element_text(size=12)) +
-    theme(axis.text.x=element_text(size=12)) +
-    theme(axis.title.y=element_text(size=15)) +
-    theme(axis.title.x=element_text(size=15)) +
-    scale_y_continuous(limits = c(0, 0.8)) + #examine data and select max limit
-    
-    facet_wrap(~event, scales="free_y")+
-    theme(strip.text.x = element_text(size=17, face="bold", vjust=1))+
-    theme(strip.text.y = element_text(size=17, face="bold", vjust=1))+
-    theme(legend.position="top") 
-  #To make filename
-  eventout <- ifelse(Events[i] < 10, paste0('00', Events[i]),
-                     ifelse(Events[i]<100, paste0('0', Events[i]),
-                            Events[i]))
-  
-  png(paste(out_dir, paste0("MISSIONID_NITRITE_Event_", eventout, '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
-  print(plot)
-  
-  dev.off()
-  
-}
-
-
-# AMMONIUM
-
-out_dir = "path/Nutrients_By_Event/AMMONIUM"
-Events = unique(jointNuts$event)
-
-
-for (i in seq(1, length(Events), 1)){
-  
-  Nuts_subset <- (jointNuts[jointNuts$event %in% Events[i],])
-  
-  plot <- ggplot(Nuts_subset, aes(x=PrDM)) +
-    geom_hline(yintercept = seq(0, 17, by=0.1), linetype='dotted', col = 'darkgrey') + #Add in lines to denote 0.05 threshold 
-    geom_point(aes(y=AMMONIUM, colour=RepID), size=2.5) +
-    guides(colour = guide_legend(label.theme = element_text(size=15))) +
-    scale_color_identity(guide = "legend", name="Rep ID") +
-    coord_flip() +
-    scale_x_reverse() +
-    theme_bw()+
-    ylab("AMMONIUM (µg/l)")+
-    xlab("Pressure (dbar)") +
-    theme(axis.text.y=element_text(size=12)) +
-    theme(axis.text.x=element_text(size=12)) +
-    theme(axis.title.y=element_text(size=15)) +
-    theme(axis.title.x=element_text(size=15)) +
-    scale_y_continuous(limits = c(0, 17)) + #examine data and select max limit
-    
-    facet_wrap(~event, scales="free_y")+
-    theme(strip.text.x = element_text(size=17, face="bold", vjust=1))+
-    theme(strip.text.y = element_text(size=17, face="bold", vjust=1))+
-    theme(legend.position="top") 
-  #To make filename
-  eventout <- ifelse(Events[i] < 10, paste0('00', Events[i]),
-                     ifelse(Events[i]<100, paste0('0', Events[i]),
-                            Events[i]))
-  
-  png(paste(out_dir, paste0("MISSIONID_AMMONIUM_Event_", eventout, '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
-  print(plot)
-  
-  dev.off()
-  
-}
-
-
-
-#To view subsets:
+#To subset and view data for individual events:
 
 subset43 <- subset(jointNuts, jointNuts$event == "43")
 View(subset43)
 
 
 
-# Step 8: Convert Final Lab Flags to BioChem Flags ------------------------------------
+# Step 9: Add Columns with Detection Limits per Sequence and BioChem flags ------------------------------------
 
-#Read in modified laboratory spreadsheet after replicates are reviewed:
+#Read in modified laboratory spreadsheet after replicates are reviewed and flagged:
 
-Nutsfinal <- read_excel("Nutrients_FILENAME.xlsx", skip=4, sheet=1, col_types='text')[, 1:14]
-
-Nutsfinal$NITRATE <- as.numeric(Nutsfinal$NITRATE)
-Nutsfinal$NITRITE <- as.numeric(Nutsfinal$NITRITE)
-Nutsfinal$PHOSPHATE <- as.numeric(Nutsfinal$PHOSPHATE)
-Nutsfinal$SILICATE <- as.numeric(Nutsfinal$SILICATE)
-Nutsfinal$AMMONIUM <- as.numeric(Nutsfinal$AMMONIUM)
-
-
+Nutsfinal <- read_excel("C:\\SET\\YOUR\\PATH\\HERE\\Nutrients_FILENAME_FLAGGED.xlsx", skip=4, sheet=1, col_types='text')[, 1:14]
 
 ##Fill in Sample ID:
-NutsF2 <- Nutsfinal  %>% 
+Nutsfinal2 <- Nutsfinal  %>% 
   mutate(SAMPLE_ID = na_if(SAMPLE_ID, "")) %>%
   fill(SAMPLE_ID)
-head(NutsF2)
+head(Nutsfinal2)
 
 
 ###Add repeating Rep ID field after SAMPLE_ID field:
-NutsF2 <- NutsF2 %>%
-  add_column(RepID = (NutsF2$RepID <- sequence(rle(as.character(NutsF2$SAMPLE_ID))$lengths)), .after="SAMPLE_ID")
+
+Nutsfinal3 <- Nutsfinal2 %>%
+  add_column(RepID = (Nutsfinal2$RepID <- sequence(rle(as.character(Nutsfinal2$SAMPLE_ID))$lengths)), .after="SAMPLE_ID")
+
+
+#Add in Detection Limits: 
+
+DL <- read_excel("C:\\SET\\YOUR\\PATH\\HERE\\Nutrients_FILENAME_FLAGGED.xlsx", 
+                 skip=7, sheet=2, cell_rows(8:11))[, 9:14]
+
+colnames(DL)[1] <- "NITRATE_DL"
+colnames(DL)[2] <- "NITRITE_DL"
+colnames(DL)[3] <- "PHOSPHATE_DL"
+colnames(DL)[4] <- "SILICATE_DL"
+colnames(DL)[5] <- "AMMONIUM_DL"
+colnames(DL)[6] <- "SEQUENCE"
+
+
+#Populate empty DL columns with DL values per Sequence:
+
+Nutsfinal4 <- Nutsfinal3 %>%
+  merge(DL, by = "SEQUENCE") %>%
+  transmute(SAMPLE_ID, RepID, SAMPLE_STATE, NITRATE, NITRATE_FLAG, NITRATE_DL = coalesce(as.character(NITRATE_DL)),
+            NITRITE, NITRITE_FLAG, NITRITE_DL = coalesce(as.character(NITRITE_DL)), PHOSPHATE, PHOSPHATE_FLAG, 
+            PHOSPHATE_DL = coalesce(as.character(PHOSPHATE_DL)), SILICATE, SILICATE_FLAG, SILICATE_DL = coalesce(as.character(SILICATE_DL)),
+            AMMONIUM, AMMONIUM_FLAG, AMMONIUM_DL = coalesce(as.character(AMMONIUM_DL)), SEQUENCE, COMMENT)
+
+
+#Convert NAs to Blank Cells for a cleaner dataframe:
+
+Nutsfinal5 <- Nutsfinal4 %>%
+  mutate(NITRATE_FLAG = ifelse(is.na(NITRATE_FLAG), "", NITRATE_FLAG),
+         NITRITE_FLAG = ifelse(is.na(NITRITE_FLAG), "", NITRITE_FLAG),
+         PHOSPHATE_FLAG = ifelse(is.na(PHOSPHATE_FLAG), "", PHOSPHATE_FLAG),
+         SILICATE_FLAG = ifelse(is.na(SILICATE_FLAG), "", SILICATE_FLAG),
+         AMMONIUM_FLAG = ifelse(is.na(AMMONIUM_FLAG), "", AMMONIUM_FLAG),
+         COMMENT = ifelse(is.na(COMMENT), "", COMMENT))
 
 
 ####Add empty QC columns. Must be after the nutrient data column, to facilitate upload:
-NutsF3 <- NutsF2 %>%
+
+Nutsfinal6 <- Nutsfinal5 %>%
   add_column(NITRATE_QC = "", .after="NITRATE") %>%
   add_column(NITRITE_QC = "", .after="NITRITE") %>%
   add_column(PHOSPHATE_QC = "", .after="PHOSPHATE") %>%
   add_column(SILICATE_QC = "", .after="SILICATE") %>%
   add_column(AMMONIUM_QC = "", .after="AMMONIUM")
-head(NutsF3)
+head(Nutsfinal6)
 
-Nutsdf<- as.data.frame(NutsF3, na.rm=TRUE)
+Nutsdf <- as.data.frame(Nutsfinal6, na.rm=TRUE)
 
-#####Convert NA entries to blanks
-Nutsdf[is.na(Nutsdf)] <- "" 
+
 
 ######Populate QC flag columns using ifelse statements:
 Nutsdf$NITRATE_QC <- ifelse(Nutsdf$NITRATE_FLAG == 'A'|Nutsdf$NITRATE_FLAG == 'B', '3',
                             ifelse(Nutsdf$NITRATE_FLAG == 'C'|Nutsdf$NITRATE_FLAG == 'G', '4',
-                              ifelse(Nutsdf$NITRATE_FLAG == 'D'|Nutsdf$NITRATE_FLAG == 'E', '6',
+                              ifelse(Nutsdf$NITRATE_FLAG == 'D'|Nutsdf$NITRATE_FLAG == 'E', '0',
                                    ifelse(Nutsdf$NITRATE_FLAG == 'F', '9',
                                           ifelse(grepl("^CH", Nutsdf$SAMPLE_ID), '0', '0')))))  
 
 Nutsdf$NITRITE_QC <- ifelse(Nutsdf$NITRITE_FLAG == 'A'|Nutsdf$NITRITE_FLAG == 'B', '3',
                             ifelse(Nutsdf$NITRITE_FLAG == 'C'|Nutsdf$NITRITE_FLAG == 'G', '4',
-                                   ifelse(Nutsdf$NITRITE_FLAG == 'D'|Nutsdf$NITRITE_FLAG == 'E', '6',
+                                   ifelse(Nutsdf$NITRITE_FLAG == 'D'|Nutsdf$NITRITE_FLAG == 'E', '0',
                                           ifelse(Nutsdf$NITRITE_FLAG == 'F', '9',
                                                  ifelse(grepl("^CH", Nutsdf$SAMPLE_ID), '0', '0')))))
 
 Nutsdf$PHOSPHATE_QC <- ifelse(Nutsdf$PHOSPHATE_FLAG == 'A'|Nutsdf$PHOSPHATE_FLAG == 'B', '3',
                               ifelse(Nutsdf$PHOSPHATE_FLAG == 'C'|Nutsdf$PHOSPHATE_FLAG == 'G', '4',
-                                     ifelse(Nutsdf$PHOSPHATE_FLAG == 'D'|Nutsdf$PHOSPHATE_FLAG == 'E', '6',
+                                     ifelse(Nutsdf$PHOSPHATE_FLAG == 'D'|Nutsdf$PHOSPHATE_FLAG == 'E', '0',
                                             ifelse(Nutsdf$PHOSPHATE_FLAG == 'F', '9',
                                                    ifelse(grepl("^CH", Nutsdf$SAMPLE_ID), '0', '0')))))
 
 Nutsdf$SILICATE_QC <- ifelse(Nutsdf$SILICATE_FLAG == 'A'|Nutsdf$SILICATE_FLAG == 'B', '3',
                              ifelse(Nutsdf$SILICATE_FLAG == 'C'|Nutsdf$SILICATE_FLAG == 'G', '4',
-                                    ifelse(Nutsdf$SILICATE_FLAG == 'D'|Nutsdf$SILICATE_FLAG == 'E', '6',
+                                    ifelse(Nutsdf$SILICATE_FLAG == 'D'|Nutsdf$SILICATE_FLAG == 'E', '0',
                                            ifelse(Nutsdf$SILICATE_FLAG == 'F', '9',
                                                   ifelse(grepl("^CH", Nutsdf$SAMPLE_ID), '0', '0')))))
 
 Nutsdf$AMMONIUM_QC <- ifelse(Nutsdf$AMMONIUM_FLAG == 'A'|Nutsdf$AMMONIUM_FLAG == 'B', '3',
                              ifelse(Nutsdf$AMMONIUM_FLAG == 'C'|Nutsdf$AMMONIUM_FLAG == 'G', '4',
-                                    ifelse(Nutsdf$AMMONIUM_FLAG == 'D'|Nutsdf$AMMONIUM_FLAG == 'E', '6',
+                                    ifelse(Nutsdf$AMMONIUM_FLAG == 'D'|Nutsdf$AMMONIUM_FLAG == 'E', '0',
                                            ifelse(Nutsdf$AMMONIUM_FLAG == 'F', '9',
                                                   ifelse(grepl("^CH", Nutsdf$SAMPLE_ID), '0', '0')))))
 #Legend to ifelse statements:
@@ -619,7 +485,22 @@ Nutsdf$AMMONIUM_QC <- ifelse(Nutsdf$AMMONIUM_FLAG == 'A'|Nutsdf$AMMONIUM_FLAG ==
 # Have or have not been QC'd yet.
 
 head(Nutsdf)
+str(Nutsdf)
 
-write.csv(Nutsdf, file="Nuts_MISSIONID_FinalLabQC.csv", row.names=FALSE)
+Nutsdf$NITRATE <- as.numeric(Nutsdf$NITRATE)
+Nutsdf$NITRITE <- as.numeric(Nutsdf$NITRITE)
+Nutsdf$PHOSPHATE <- as.numeric(Nutsdf$PHOSPHATE)
+Nutsdf$SILICATE <- as.numeric(Nutsdf$SILICATE)
+Nutsdf$AMMONIUM <- as.numeric(Nutsdf$AMMONIUM)
+
+
+#Convert negative DL values to zero:
+
+Nutsdf[Nutsdf < 0] <- 0
+
+
+#Export:
+
+write.csv(Nutsdf, file="C:\\SET\\YOUR\\PATH\\HERE\\Nuts_MISSIONID_FinalLabQC.csv", row.names=FALSE)
 
 
