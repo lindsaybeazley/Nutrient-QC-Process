@@ -173,6 +173,8 @@ jointNuts2 <- jointNuts2 %>% mutate_at(c('PrDM', 'T090C', 'Sal00'), as.numeric)
 
 # Step 5: Plot Data by Environment ----------------------------------------
 
+#First, create the empty folders in your working directory to store the plots.
+
 out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Environment"
 nutrients <- unique(jointNuts2$variable)
 mission='xxxYEARyyy' #where xxx = abbreviated vessel name, and yyy = unique station name or mission ID, e.g., BCD2024666 or CAR2024010
@@ -306,7 +308,6 @@ for(i in seq(1, length(nom_depths), 1)){
 ##c) examine divergence between replicates and eliminate data if applicable. The plots and the data are examined outside
 ##R, and the data modified in the lab spreadsheet if applicable.
   
-#First, create the empty folders in your working directory to store the plots.
 
 
 out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Event"
@@ -374,6 +375,9 @@ for (m in seq(1, length(Events), 1)){
 
 subset43 <- subset(jointNuts, jointNuts$event == "43")
 View(subset43)
+
+
+### Make a copy of Peter Thamer's original laboratory spreadsheet, and called it "Nutrients_FILENAME_FLAGGED.xlsx", and add your flags directly to this file based on your evaluation of the plots from the above exercises. 
 
 
 
