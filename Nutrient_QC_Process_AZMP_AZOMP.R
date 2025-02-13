@@ -423,6 +423,11 @@ Nutsfinal4 <- Nutsfinal3 %>%
             AMMONIUM, AMMONIUM_FLAG, AMMONIUM_DL = coalesce(as.character(AMMONIUM_DL)), SEQUENCE, COMMENT)
 
 
+#This is an IMPORTANT QC check: make sure that records from Nutsfinal3 were not lost when joining the detection limits. If they were, the Sequence information is likely missing from the QC tab:
+nrow(Nutsfinal3)
+nrow(Nutsfinal4) #Do they match?
+
+
 #Convert NAs to Blank Cells for a cleaner dataframe:
 
 Nutsfinal5 <- Nutsfinal4 %>%
