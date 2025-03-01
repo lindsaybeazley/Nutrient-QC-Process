@@ -122,11 +122,20 @@ write.csv(Diff, file=paste(data_dir, "Differences_Replicates_MISSION_NAME_GOES_H
 # Step 4: Load QAT Data to get Environmental Factors ------------------------------------
 
 
-#Load QAT data using one of the following 3 options, to get depth, temp, etc. and merge it with nutrient data. 
-#QAT files are comma delimited = CSV:
+#Load QAT data using one of the following 3 options, to get depth, temp, etc. and merge it with nutrient data. QAT files are comma delimited = CSV.
+
+#Change your QAT path according to one of the options below:
+
+qat_path <- '//ent.dfo-mpo.ca/ATLShares/Science/BIODataSvc/SRC/2020s/MISSIONNAME/LOCATION' #, where:
+
+# Option 1 is path to individual calibrated or uncalibrated QAT files from mission folder (//ent.dfo-mpo.ca/ATLShares/Science/BIODataSvc/SRC/2020s/2024/CAR2024010/CTD/DATASHOP_PROCESSING/Step_2_Apply_Calibrations/QAT'
+# Option 2 is path to collated QAT file produced by BIO Data Shop (e.g., )
+# Option 3 is path to IML bottle report in ANDES folder (if individual QAT files are not available) (e.g., ANDES_Reports/IML bottle report CAR-2022-025 (2022-10-01).xlsx)
+
+
 
 #Option 1: Directly load individual QAT files (make sure path leads to calibrated QATs, if available):
-CombinedQATs <- list.files(path = "path\\Step_2_Apply_Calibrations\\QAT\\",
+CombinedQATs <- list.files(path = qat_path,
                            pattern = "*.QAT$", full.names = TRUE) %>% 
   lapply(read_csv, col_types= cols(.default = col_character())) %>% # Store all files in list
   bind_rows                                                                               
@@ -141,9 +150,7 @@ colnames(CombinedQATs)[6] <- "SAMPLE_ID"
 
 
 #Option 2: Load collated QAT xlsx or csv file (if CTD data have been post-processed):
-setwd("path\\Step_2_Apply_Calibrations\\QAT\\")
-
-CombinedQATs <- read_excel("MISSIONID_QAT_Corrected.xlsx") 
+CombinedQATs <- read_excel(file.path(qat_path, "CAR2024010_QAT_Corrected.xlsx")) 
 
 CombinedQATs <-as.data.frame(CombinedQATs)
 
@@ -155,7 +162,7 @@ CombinedQATs <- CombinedQATs[, -17:-39]
 
 
 #Option 3: Load IML bottle report from ANDES (if sGSL mission and CTD data have not been post-processed):
-Bottlerep <- read_excel("path/ANDES_Reports/IML bottle report CAR-2022-025 (2022-10-01).xlsx", sheet=1)
+Bottlerep <- read_excel(file.path(qat_path, "IML bottle report.xlsx"), sheet=1)
 
 Bottlerep_df <- as.data.frame(Bottlerep)
 
