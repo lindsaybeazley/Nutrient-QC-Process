@@ -15,6 +15,8 @@ library(ggplot2)
 
 
 
+
+
 # Step 1: Load Nutrient Data ------------------------------------
 
 Nuts <- read_excel("Path where your Excel file is stored\\File Name.xlsx", skip=4, sheet=1, col_types='text')[, 1:12] #Skip the first 4 rows containing the header
@@ -175,7 +177,11 @@ jointNuts2 <- jointNuts2 %>% mutate_at(c('PrDM', 'T090C', 'Sal00'), as.numeric)
 
 #First, create the empty folders in your working directory to store the plots.
 
-out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Environment"
+#Check and see if directory/folder for plots has been created. If not, create one:
+plots_enviro_dir <- './Nutrients_By_Environment'
+if(!dir.exists(plots_enviro_dir)){
+  dir.create(plots_enviro_dir, recursive = TRUE)
+}
 nutrients <- unique(jointNuts2$variable)
 mission='xxxYEARyyy' #where xxx = abbreviated vessel name, and yyy = unique station name or mission ID, e.g., BCD2024666 or CAR2024010
 
@@ -191,7 +197,7 @@ for(i in seq(1, length(nutrients), 1)){
       theme(axis.text.x=element_text(size=10)) +
       theme(legend.position="none")
     
-    png(paste(out_dir, paste0(mission, '_', nutrients[i], '_', m, '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+    png(paste(plots_enviro_dir, paste0(mission, '_', nutrients[i], '_', m, '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
     print(plot)
     
     dev.off()
@@ -203,7 +209,11 @@ for(i in seq(1, length(nutrients), 1)){
 
 # Step 6: Plot Data Across Time/Year --------
 
-out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Time"
+#Check and see if directory/folder for plots has been created. If not, create one:
+plots_time_dir <- './Nutrients_By_Time'
+if(!dir.exists(plots_time_dir)){
+  dir.create(plots_time_dir, recursive = TRUE)
+}
 
 for(i in seq(1, length(nutrients), 1)){
   sub <- (jointNuts2[jointNuts2$variable %in% nutrients[i],])
@@ -216,7 +226,7 @@ for(i in seq(1, length(nutrients), 1)){
     theme(axis.text.y=element_text(size=10)) +
     theme(axis.text.x=element_text(size=10))
   
-  png(paste(out_dir, paste0(mission, '_', nutrients[i], '_By_Time', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+  png(paste(plots_time_dir, paste0(mission, '_', nutrients[i], '_By_Time', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
   print(plot)
   
   dev.off()
@@ -226,8 +236,6 @@ for(i in seq(1, length(nutrients), 1)){
 
 #The following code is useful for fixed stations, but not for missions. This plots the mean concentration of each sample by collected
 #within each cast/event, per depth
-
-out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Time"
 
 for(i in seq(1, length(nutrients), 1)){
   sub <- (jointNuts2[jointNuts2$variable %in% nutrients[i],])
@@ -246,7 +254,7 @@ for(i in seq(1, length(nutrients), 1)){
     theme(axis.text.y=element_text(size=10)) +
     theme(axis.text.x=element_text(size=10)) 
   
-  png(paste(out_dir, paste0(mission, '_', nutrients[i], '_By_Time_VerticalProfiles', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+  png(paste(plots_time_dir, paste0(mission, '_', nutrients[i], '_By_Time_VerticalProfiles', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
   print(plot)
   
   dev.off()
@@ -256,7 +264,11 @@ for(i in seq(1, length(nutrients), 1)){
 
 # Step 7: Extract Data by Depth Stratum and Plot  --------
 
-out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Depth"
+#Check and see if directory/folder for plots has been created. If not, create one:
+plots_depth_dir <- './Nutrients_By_Depth'
+if(!dir.exists(plots_depth_dir)){
+  dir.create(plots_depth_dir, recursive = TRUE)
+}
 
 nom_depths <- c(0, 5, 10, 20, 30, 40, 50, 75, 100, 140) #These may change depending on the station, mission, etc.
 bin <- c(3, 5, 5, 5, 5, 5, 5, 5, 5, 5) #3 was chosen for the surface bin
@@ -291,7 +303,7 @@ for(i in seq(1, length(nom_depths), 1)){
               plot <- plot + scale_y_continuous(limits = c(0, 2))
             }
   
-            png(paste(out_dir, paste0(mission,'_',nutrients[s],'_',nom_depths[i],'m', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
+            png(paste(plots_depth_dir, paste0(mission,'_',nutrients[s],'_',nom_depths[i],'m', '.png'), sep='/'), width = 16, height = 8, units = 'in', res = 250)
             print(plot)
   
             dev.off()
@@ -309,8 +321,12 @@ for(i in seq(1, length(nom_depths), 1)){
 ##R, and the data modified in the lab spreadsheet if applicable.
   
 
+#Check and see if directory/folder for plots has been created. If not, create one:
+plots_event_dir <- './Nutrients_By_Event'
+if(!dir.exists(plots_event_dir)){
+  dir.create(plots_event_dir, recursive = TRUE)
+}
 
-out_dir = "C:/SET/YOUR/OUT/DIRECTORY/HERE/Nutrients_By_Event"
 Events = unique(jointNuts2$event)
 mission='xxxYEARyyy' #where xxx = abbreviated vessel name, and yyy = unique station name or mission ID, e.g., BCD2024666 or CAR2024010
 
@@ -362,7 +378,7 @@ for (m in seq(1, length(Events), 1)){
         scale_y_continuous(limits = c(0, 2), sec.axis = sec_axis(~.*10.0, name = "Temperature")) 
     }
     
-    png(paste(out_dir, paste0(mission, '_', nutrients[i], '_Event_', Events[m], '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
+    png(paste(plots_event_dir, paste0(mission, '_', nutrients[i], '_Event_', Events[m], '.png'), sep='/'), width = 10, height = 8, units = 'in', res = 250)
     print(plot)
     
     dev.off()
