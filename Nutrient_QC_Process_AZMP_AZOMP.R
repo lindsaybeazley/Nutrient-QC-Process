@@ -6,6 +6,10 @@
 
 # Step 0: Housekeeping ------------------------------------
 
+
+# Save this .R file in your mission folder and nutrients subfolder (e.g., DY18402/Nutrients)
+
+
 #Load packages:
 
 library(tidyr)
@@ -14,9 +18,6 @@ library(readxl)
 library(data.table)
 library(tidyverse)
 library(ggplot2)
-
-
-# Save this .R file in your mission folder and nutrients subfolder (e.g., DY18402/Nutrients)
 
 
 #Create a folder where you can store and load the nutrients dataset, and export other datasets:
