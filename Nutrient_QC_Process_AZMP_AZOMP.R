@@ -4,6 +4,8 @@
 #Last Updated: March 1, 2025
 
 
+# Step 0: Housekeeping ------------------------------------
+
 #Load packages:
 
 library(tidyr)
@@ -14,17 +16,24 @@ library(tidyverse)
 library(ggplot2)
 
 
+# Save this .R file in your mission folder and nutrients subfolder (e.g., DY18402/Nutrients)
+
+
+#Create a folder where you can store and load the nutrients dataset, and export other datasets:
+data_dir <- './data'
+if(!dir.exists(data_dir)){
+  dir.create(data_dir, recursive = TRUE)
+}
 
 
 
 # Step 1: Load Nutrient Data ------------------------------------
 
-Nuts <- read_excel("Path where your Excel file is stored\\File Name.xlsx", skip=4, sheet=1, col_types='text')[, 1:12] #Skip the first 4 rows containing the header
+Nuts <- read_excel(file.path(data_dir, "YOURFILENAME.xlsx"), skip=4, sheet=1, col_types='text')[, 1:13] #Skip the first 4 rows containing the header
 
-#Note: The col_types argument is set to read all columns in as text. This is to allow you to read
-##in those columns that have cells with NAs.
+#Note: The col_types argument is set to read all columns in as text. This is to allow you to read in those columns that have cells with NAs.
 
-#The [ , 1:12] appended at the end reads in only the first 12 columns. The BIO rating guide and BioChem flag scheme are skipped.
+#The [ , 1:13] appended at the end reads in only the first 13 columns. The BIO rating guide and BioChem flag scheme are skipped.
 
 
 
@@ -89,7 +98,7 @@ Diff <- Nutsdf %>%
 head(Diff)
 
 
-write.csv(Diff, file="Differences_Replicates_MISSION_NAME_GOES_HERE.csv")
+write.csv(Diff, file=paste(data_dir, "Differences_Replicates_MISSION_NAME_GOES_HERE.csv", row.names=F, sep='/'))
 
 
 #The BIO datashop has been using these tolerated differences:
@@ -401,7 +410,7 @@ View(subset43)
 
 #Read in modified laboratory spreadsheet after replicates are reviewed and flagged:
 
-Nutsfinal <- read_excel("C:\\SET\\YOUR\\PATH\\HERE\\Nutrients_FILENAME_FLAGGED.xlsx", skip=4, sheet=1, col_types='text')[, 1:14]
+Nutsfinal <- read_excel(file.path(data_dir, "Nutrients_FILENAME_FLAGGED.xlsx"), skip=4, sheet=1, col_types='text')[, 1:14]
 
 ##Fill in Sample ID:
 Nutsfinal2 <- Nutsfinal  %>% 
@@ -418,8 +427,7 @@ Nutsfinal3 <- Nutsfinal2 %>%
 
 #Add in Detection Limits: 
 
-DL <- read_excel("C:\\SET\\YOUR\\PATH\\HERE\\Nutrients_FILENAME_FLAGGED.xlsx", 
-                 skip=7, sheet=2, cell_rows(8:11))[, 9:14]
+DL <- read_excel(file.path(data_dir, "Nutrients_FILENAME_FLAGGED.xlsx"), skip=7, sheet=2, cell_rows(8:11))[, 9:14]
 
 colnames(DL)[1] <- "NITRATE_DL"
 colnames(DL)[2] <- "NITRITE_DL"
@@ -524,8 +532,8 @@ Nutsdf$AMMONIUM <- as.numeric(Nutsdf$AMMONIUM)
 Nutsdf[Nutsdf < 0] <- 0
 
 
-#Export:
+#Export your final QC'd dataset:
 
-write.csv(Nutsdf, file="C:\\SET\\YOUR\\PATH\\HERE\\Nuts_MISSIONID_FinalLabQC.csv", row.names=FALSE)
+write.csv(Nutsdf, file=paste(data_dir, "Nuts_MISSIONID_FinalLabQC.csv", row.names=FALSE, sep='/'))
 
 
