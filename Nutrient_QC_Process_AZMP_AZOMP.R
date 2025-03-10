@@ -99,7 +99,7 @@ Diff <- Nutsdf %>%
 head(Diff)
 
 
-write.csv(Diff, file=paste(data_dir, "Differences_Replicates_MISSION_NAME_GOES_HERE.csv", row.names=F, sep='/'))
+write.csv(Diff, file=paste(data_dir, "Differences_Replicates_MISSION_NAME_GOES_HERE.csv", sep='/'), row.names=F)
 
 
 #The BIO datashop has been using these tolerated differences:
