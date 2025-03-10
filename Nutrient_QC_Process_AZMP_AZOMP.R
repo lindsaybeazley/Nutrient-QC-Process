@@ -129,7 +129,7 @@ write.csv(Diff, file=paste(data_dir, "Differences_Replicates_MISSION_NAME_GOES_H
 
 qat_path <- '//ent.dfo-mpo.ca/ATLShares/Science/BIODataSvc/SRC/2020s/MISSIONNAME/LOCATION' #, where:
 
-# Option 1 is path to individual calibrated or uncalibrated QAT files from mission folder (//ent.dfo-mpo.ca/ATLShares/Science/BIODataSvc/SRC/2020s/2024/CAR2024010/CTD/DATASHOP_PROCESSING/Step_2_Apply_Calibrations/QAT'
+# Option 1 is path to individual calibrated or uncalibrated QAT files from mission folder (e.g., //ent.dfo-mpo.ca/ATLShares/Science/BIODataSvc/SRC/2020s/2024/CAR2024010/CTD/DATASHOP_PROCESSING/Step_2_Apply_Calibrations/QAT'
 # Option 2 is path to collated QAT file produced by BIO Data Shop (e.g., )
 # Option 3 is path to IML bottle report in ANDES folder (if individual QAT files are not available) (e.g., ANDES_Reports/IML bottle report CAR-2022-025 (2022-10-01).xlsx)
 
@@ -151,7 +151,7 @@ colnames(CombinedQATs)[6] <- "SAMPLE_ID"
 
 
 #Option 2: Load collated QAT xlsx or csv file (if CTD data have been post-processed):
-CombinedQATs <- read_excel(file.path(qat_path, "CAR2024010_QAT_Corrected.xlsx")) 
+CombinedQATs <- read_excel(file.path(qat_path, "MISSIONNAME_QAT_Corrected.xlsx")) 
 
 CombinedQATs <-as.data.frame(CombinedQATs)
 
