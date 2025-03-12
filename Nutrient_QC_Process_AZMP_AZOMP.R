@@ -542,6 +542,6 @@ Nutsdf[Nutsdf < 0] <- 0
 
 #Export your final QC'd dataset:
 
-write.csv(Nutsdf, file=paste(data_dir, "Nuts_MISSIONID_FinalLabQC.csv", row.names=FALSE, sep='/'))
+write.csv(Nutsdf, file=paste(data_dir, "Nuts_MISSIONID_FinalLabQC.csv", sep='/'), row.names=FALSE)
 
 
